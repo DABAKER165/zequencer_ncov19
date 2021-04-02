@@ -143,7 +143,7 @@ def process(lines=None):
 df_amp_len_dict = {}
 
 # get the sequence
-# fasta_filepath= '/Users/dabaker3/chtc_serpent/zequencer/static_files/nCoV-2019/V3/nCoV-2019.reference.fasta'
+
 if primer_fasta_filepath is None and ((ref_fasta_filepath is None) or (bed_filepath is None)):
     exit(1)
 

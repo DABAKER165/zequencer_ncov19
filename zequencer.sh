@@ -42,7 +42,8 @@ usage () { echo "Usage : $0
 --outdir -I (string) default: ../out   | Help if you want to manually set the outdir set it
 --reads_per_amplicon -J (int) default: 0   | Help used for downsampling normalization 0 will not down sample.  200 or 2000 is typical
 --downsampling_fasta_path -K (string) default: <blank>   | Help fasta of all the amplicons (start of forward to end of reverse primer to the reference genome given.  If your amplicons map to multiple references you cannot use the short cut.  If it is not declared it can be generated from the bedfile and reference fasta.
---fast_normalize -L (boolean) default: f   | Help use a custom script to downsample about 10-100x faster than the original algorithm"; }
+--fast_normalize -L (boolean) default: f   | Help use a custom script to downsample about 10-100x faster than the original algorithm \\
+--rem_int_files -M (boolean) default: t    | Help removes intermediate files created in the pipeline levaing the final Sorted BAM, Index Bam, VCF and Annotaged VCR files"; }
 
 ref_adaptor_path=/nCoV-2019_adapters.fasta
 ref_path=/ref/MN908947.3.fasta
@@ -80,6 +81,7 @@ bed_path=/nCoV-2019/V3/nCoV-2019.bed
 outdir=../out
 reads_per_amplicon=0
 fast_normalize=f
+rem_int_files=t
 
 for arg in "$@"; do
 shift
@@ -122,11 +124,12 @@ case "$arg" in
 	"--reads_per_amplicon") set -- "$@" "-J" ;;
 	"--downsampling_fasta_path") set -- "$@" "-K" ;;
 	"--fast_normalize") set -- "$@" "-L" ;;
+	"--rem_int_files") set -- "$@" "-M" ;;
 	*) set -- "$@" "$arg"
 esac
 done
 
-while getopts a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L: opt ; do
+while getopts a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L:M: opt ; do
 case $opt in
 	a) sample_dir=$OPTARG ;;
 	b) ref_adaptor_path=$OPTARG ;;
@@ -166,6 +169,7 @@ case $opt in
 	J) reads_per_amplicon=$OPTARG ;;
 	K) downsampling_fasta_path=$OPTARG ;;
 	L) fast_normalize=$OPTARG ;;
+	M) rem_int_files=$OPTARG ;;
 	*) usage; exit 1;;
 esac
 done
@@ -177,28 +181,39 @@ cd ${sample_dir}
 #pwd
 #
 echo ${outdir}
+# Sometimes docker's relative paths fail on mounted drives because os.getwd() and pwd fail on mounted drives.
+# The solutions is to stop and start the docker image, or use absolute paths.
+# This will help mitigate a failure that happens minutes or hours into a run.
+
 if [[ "${outdir:0:2}" = ".." ]]
     then
-    out_dir=`pwd`
-    parent_dir="$( dirname "${out_dir}" )"
-    outdir="${parent_dir}${outdir:2}"
+    # get the
+    cwd_dir=`pwd`
+    parent_dir="$( dirname "${cwd_dir}" )"
+    # remove trailing slash if it exists
+    outdir="${parent_dir%/}${outdir:2}"
 fi
 
-
+${outdir%/}
 echo ${outdir}
 echo ${sample_dir}
 find * -maxdepth 1 -type f -name "*-R1.fastq.gz" > fastq_list.txt
 # loop trough match file names
 for fastq_file in `cat fastq_list.txt`;  do
+    # We should figure out the paths here
+    # Each sample should have its own "intermediate folder" that has files to be deleted, optionally.
+    # Then primary files, final BAM file, bam index file and 2 annotated files should be in this parent out dir
 
     sample_name=${fastq_file%????????????}
+    sample_dir=${outdir%/}/${sample_name}
+
     echo ${sample_name}
     r1_fastq=${sample_name}-R1.fastq.gz
     r2_fastq=${sample_name}-R2.fastq.gz
 
     # make an out folder in the parent directory and dont error if it already exists
     mkdir -p ${outdir}
-
+    mkdir -p ${sample_dir}
     ######
     # Normaliztion through Downsampling
     # Set downsampling to a positive number,
@@ -213,7 +228,7 @@ for fastq_file in `cat fastq_list.txt`;  do
         java -ea -Xmx${ram}m -Xms${ram}m -Djava.library.path=/bin/bbmap/jni/ -cp /bin/bbmap/current/ jgi.BBMerge \
         in=${r1_fastq} \
         in2=${r2_fastq} \
-        out=${outdir}/${sample_name}_custom.not_norm.merged.fastq
+        out=${sample_dir}/${sample_name}_custom.not_norm.merged.fastq
 
         if [[ "${reads_per_amplicon}" -ne "0" ]]
         then
@@ -231,54 +246,57 @@ for fastq_file in `cat fastq_list.txt`;  do
                 --minlength_diff=${minlength_diff} \
                 --maxlength_diff=${maxlength_diff} \
                 --sample_name=${sample_name} \
-                --in_merged_filepath=${outdir}/${sample_name}_custom.not_norm.merged.fastq \
-                --outdir=${outdir} \
+                --in_merged_filepath=${sample_dir}/${sample_name}_custom.not_norm.merged.fastq \
+                --outdir=${sample_dir} \
                 --ref_fasta_filepath=${ref_path} \
                 --primer_fasta_filepath=${ref_adaptor_path}
 
-                java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${outdir}/${sample_name}_custom_filtered.fastq \
-                outm=${outdir}/${sample_name}.premap.bam \
+                java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${sample_dir}/${sample_name}_custom_filtered.fastq \
+                outm=${sample_dir}/${sample_name}.premap.bam \
                 ref=${ref_path} \
                 overwrite=t \
                 nodisk=t
-                rm -f ${outdir}/${sample_name}_custom_filtered.fastq
-                samtools collate ${outdir}/${sample_name}.premap.bam ${outdir}/${sample_name}.random
+                rm -f ${sample_dir}/${sample_name}_custom_filtered.fastq
+                samtools collate ${sample_dir}/${sample_name}.premap.bam ${sample_dir}/${sample_name}.random
 
                 python3 /amplicon_normalize_from_bam.py \
-                --bam_inpath=${outdir}/${sample_name}.random.bam \
-                --bam_outpath=${outdir}/${sample_name}.norm.bam \
+                --bam_inpath=${sample_dir}/${sample_name}.random.bam \
+                --bam_outpath=${sample_dir}/${sample_name}.norm.bam \
                 --bed_path=${bed_path} \
                 --reads_per_amplicon=${reads_per_amplicon}
-                samtools sort -o ${outdir}/${sample_name}.norm.sorted.bam --reference ${ref_path} ${outdir}/${sample_name}.norm.bam
-                samtools index ${outdir}/${sample_name}.norm.sorted.bam
+                samtools sort -o ${sample_dir}/${sample_name}.norm.sorted.bam --reference ${ref_path} ${sample_dir}/${sample_name}.norm.bam
+                samtools index ${sample_dir}/${sample_name}.norm.sorted.bam
                 java -ea -Xms${ram}m -cp /bin/bbmap/current/ jgi.ReformatReads \
-                in=${outdir}/${sample_name}.norm.sorted.bam \
-                out=${outdir}/${sample_name}_custom.merged.fastq
+                in=${sample_dir}/${sample_name}.norm.sorted.bam \
+                out=${sample_dir}/${sample_name}_custom.merged.fastq
 
             else
                 echo "python3 /amplicon_normalization.py \
     --downsampling_fasta_path=${downsampling_fasta_path} \
     --reads_per_amplicon=${reads_per_amplicon} \
-    --outdir=${outdir} \
+    --outdir=${sample_dir} \
     --min_length_diff=${minlength_diff} \
     --bed_path=${bed_path} \
     --ref_path=${ref_path} \
-    --merged_fasta_path=${outdir}/${sample_name}_custom.not_norm.merged.fastq \
+    --merged_fasta_path=${sample_dir}/${sample_name}_custom.not_norm.merged.fastq \
     --output_filename=${sample_name}_custom.merged.fastq \
-    --include_primer=t"
+    --include_primer=t \
+                --ram=${ram}"
                 python3 /amplicon_normalization.py \
                 --downsampling_fasta_path=${downsampling_fasta_path} \
                 --reads_per_amplicon=${reads_per_amplicon} \
-                --outdir=${outdir} \
+                --outdir=${sample_dir} \
                 --min_length_diff=${minlength_diff} \
                 --bed_path=${bed_path} \
                 --ref_path=${ref_path} \
-                --merged_fasta_path=${outdir}/${sample_name}_custom.not_norm.merged.fastq \
-                --output_filename=${sample_name}_custom.merged.fastq \
-                --include_primer=t
+                --merged_fasta_path=${sample_dir}/${sample_name}_custom.not_norm.merged.fastq \
+                --output_filename=${sample_dir}/${sample_name}_custom.merged.fastq.gz \
+                --include_primer=t \
+                --ram=${ram}
+                gunzip ${sample_dir}/${sample_name}_custom.merged.fastq.gz
             fi
         else
-            mv ${outdir}/${sample_name}_custom.not_norm.merged.fastq ${outdir}/${sample_name}_custom.merged.fastq
+            mv ${sample_dir}/${sample_name}_custom.not_norm.merged.fastq ${sample_dir}/${sample_name}_custom.merged.fastq
         fi
         echo "python3 /trim_strict.py \
         --bed_filepath=${bed_path} \
@@ -289,8 +307,8 @@ for fastq_file in `cat fastq_list.txt`;  do
         --minlength_diff=${minlength_diff} \
         --maxlength_diff=${maxlength_diff} \
         --sample_name=${sample_name} \
-        --in_merged_filepath=${outdir}/${sample_name}_custom.merged.fastq \
-        --outdir=${outdir} \
+        --in_merged_filepath=${sample_dir}/${sample_name}_custom.merged.fastq \
+        --outdir=${sample_dir} \
         --ref_fasta_filepath=${ref_path} \
         --primer_fasta_filepath=${ref_adaptor_path}"
         python3 /trim_strict.py \
@@ -302,14 +320,14 @@ for fastq_file in `cat fastq_list.txt`;  do
         --minlength_diff=${minlength_diff} \
         --maxlength_diff=${maxlength_diff} \
         --sample_name=${sample_name} \
-        --in_merged_filepath=${outdir}/${sample_name}_custom.merged.fastq \
-        --outdir=${outdir} \
+        --in_merged_filepath=${sample_dir}/${sample_name}_custom.merged.fastq \
+        --outdir=${sample_dir} \
         --ref_fasta_filepath=${ref_path} \
         --primer_fasta_filepath=${ref_adaptor_path}
 
         java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ jgi.BBDuk \
-        in=${outdir}/${sample_name}_custom_filtered.fastq \
-        out=${outdir}/${sample_name}.trimmed.merged.fastq.gz \
+        in=${sample_dir}/${sample_name}_custom_filtered.fastq \
+        out=${sample_dir}/${sample_name}.trimmed.merged.fastq.gz \
         qtrim=${qtrim} \
         trimq=${trimq} \
         minavgquality=${minavgquality} \
@@ -320,8 +338,8 @@ for fastq_file in `cat fastq_list.txt`;  do
         java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ jgi.BBDuk \
         in=${r1_fastq} \
         in2=${r2_fastq} \
-        outm=${outdir}/${sample_name}_R1_filtered.fastq.gz \
-        outm2=${outdir}/${sample_name}_R2_filtered.fastq.gz \
+        outm=${sample_dir}/${sample_name}_R1_filtered.fastq.gz \
+        outm2=${sample_dir}/${sample_name}_R2_filtered.fastq.gz \
         ref=${ref_adaptor_path} \
         k=${k} \
         hdist=${hdist} \
@@ -332,10 +350,10 @@ for fastq_file in `cat fastq_list.txt`;  do
 
         # with the filtered reads, trim the reads and low quality ends
         java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ jgi.BBDuk \
-        in=${outdir}/${sample_name}_R1_filtered.fastq.gz \
-        in2=${outdir}/${sample_name}_R2_filtered.fastq.gz \
-        out=${outdir}/${sample_name}_R1_cleaned.fastq.gz \
-        out2=${outdir}/${sample_name}_R2_cleaned.fastq.gz \
+        in=${sample_dir}/${sample_name}_R1_filtered.fastq.gz \
+        in2=${sample_dir}/${sample_name}_R2_filtered.fastq.gz \
+        out=${sample_dir}/${sample_name}_R1_cleaned.fastq.gz \
+        out2=${sample_dir}/${sample_name}_R2_cleaned.fastq.gz \
         ref=${ref_adaptor_path} \
         ktrim=${ktrim} \
         k=${k} \
@@ -350,9 +368,9 @@ for fastq_file in `cat fastq_list.txt`;  do
         # Merge the reads to ensure a overlap of somesort
         # default minoverlap=12
         java -ea -Xmx${ram}m -Xms${ram}m -Djava.library.path=/bin/bbmap/jni/ -cp /bin/bbmap/current/ jgi.BBMerge \
-        in=${outdir}/${sample_name}_R1_cleaned.fastq.gz \
-        in2=${outdir}/${sample_name}_R2_cleaned.fastq.gz \
-        out=${outdir}/${sample_name}.not_norm.merged.fastq.gz \
+        in=${sample_dir}/${sample_name}_R1_cleaned.fastq.gz \
+        in2=${sample_dir}/${sample_name}_R2_cleaned.fastq.gz \
+        out=${sample_dir}/${sample_name}.not_norm.merged.fastq.gz \
         overwrite=t
 
         if [[ "${reads_per_amplicon}" -ne "0" ]]
@@ -360,11 +378,11 @@ for fastq_file in `cat fastq_list.txt`;  do
         echo "python3 /amplicon_normalization.py \
 --downsampling_fasta_path=${downsampling_fasta_path} \
 --reads_per_amplicon=${reads_per_amplicon} \
---outdir=${outdir} \
+--outdir=${sample_dir} \
 --min_length_diff=${minlength_diff} \
 --bed_path=${bed_path} \
 --ref_path=${ref_path} \
---merged_fasta_path=${outdir}/${sample_name}.not_norm.merged.fastq.gz \
+--merged_fasta_path=${sample_dir}/${sample_name}.not_norm.merged.fastq.gz \
 --output_filename=${sample_name}_custom.merged.fastq.gz \
 --include_primer=f \
 --ram=${ram}"
@@ -372,24 +390,24 @@ for fastq_file in `cat fastq_list.txt`;  do
             python3 /amplicon_normalization.py \
             --downsampling_fasta_path=${downsampling_fasta_path} \
             --reads_per_amplicon=${reads_per_amplicon} \
-            --outdir=${outdir} \
+            --outdir=${sample_dir} \
             --min_length_diff=${minlength_diff} \
             --bed_path=${bed_path} \
             --ref_path=${ref_path} \
-            --merged_fasta_path=${outdir}/${sample_name}.not_norm.merged.fastq.gz \
-            --output_filename=${sample_name}.merged.fastq.gz \
+            --merged_fasta_path=${sample_dir}/${sample_name}.not_norm.merged.fastq.gz \
+            --output_filename=${sample_dir}/${sample_name}.merged.fastq.gz \
             --include_primer=f \
             --ram=${ram}
         else
-            mv ${outdir}/${sample_name}.not_norm.merged.fastq.gz ${outdir}/${sample_name}.merged.fastq.gz
+            mv ${sample_dir}/${sample_name}.not_norm.merged.fastq.gz ${sample_dir}/${sample_name}.merged.fastq.gz
         fi
 
         # Trim reads that are too short or too long (inner amplicon range is 323 to 380)
         java -ea -Xms${ram}m -cp /bin/bbmap/current/ jgi.ReformatReads \
-        in=${outdir}/${sample_name}.merged.fastq.gz \
+        in=${sample_dir}/${sample_name}.merged.fastq.gz \
         maxlength=${maxlength} \
         minlength=${minlength} \
-        out=${outdir}/${sample_name}.trimmed.merged.fastq.gz \
+        out=${sample_dir}/${sample_name}.trimmed.merged.fastq.gz \
         overwrite=t
 
     fi
@@ -397,22 +415,22 @@ for fastq_file in `cat fastq_list.txt`;  do
     # delete the genome and index folders
     rm -rf ref/genome
     rm -rf ref/index
-    echo "java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${outdir}/${sample_name}.trimmed.merged.fastq.gz \
-    outm=${outdir}/${sample_name}.bam \
+    echo "java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${sample_dir}/${sample_name}.trimmed.merged.fastq.gz \
+    outm=${sample_dir}/${sample_name}.bam \
     ref=${ref_path} \
     maxindel=${maxindel} \
     overwrite=t"
 
     # map using bbmap.  Do not allow for more than 100 indels
-    java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${outdir}/${sample_name}.trimmed.merged.fastq.gz \
-    outm=${outdir}/${sample_name}.bam \
+    java -ea -Xmx${ram}m -Xms${ram}m -cp /bin/bbmap/current/ align2.BBMap build=1 in=${sample_dir}/${sample_name}.trimmed.merged.fastq.gz \
+    outm=${sample_dir}/${sample_name}.bam \
     ref=${ref_path} \
     maxindel=${maxindel} \
     overwrite=t \
     nodisk=t
 
     # sort and index the files (using samtools)
-    samtools sort -o ${outdir}/${sample_name}.sorted.bam --reference ${ref_path} ${outdir}/${sample_name}.bam
+    samtools sort -o ${outdir}/${sample_name}.sorted.bam --reference ${ref_path} ${sample_dir}/${sample_name}.bam
     samtools index ${outdir}/${sample_name}.sorted.bam
 
     # call the variants
@@ -432,5 +450,10 @@ for fastq_file in `cat fastq_list.txt`;  do
     overwrite=t
 
     snpEff -c ${config_path} -ud -onlyProtein ${ncbi_accession} ${outdir}/${sample_name}.bbmap.vcf > ${outdir}/${sample_name}.bbmap.ann.vcf
-
+    rem_int_f=${rem_int_files:0:1}
+            # make the first character uppercase if it is T as is t, T, True, true TRUE etc. it will pass the condition
+    if [[ "${rem_int_f^^}" = "T" ]]
+        then
+        rm -rf ${sample_dir}
+    fi
 done

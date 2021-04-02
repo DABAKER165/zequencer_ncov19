@@ -94,11 +94,10 @@ merged_fasta_path = args.merged_fasta_path
 output_filename = args.output_filename
 include_primer = args.include_primer
 ram = args.ram
-
 tmp_dir = outdir
 if not (output_filename.endswith('.fq.gz') or output_filename.endswith('.fastq.gz')):
     if output_filename.endswith('.fq') or output_filename.endswith('.fastq'):
-        '{0}.gz'.format(output_filename)
+        output_filename = '{0}.gz'.format(output_filename)
     else:
         '{0}.fastq.gz'.format(output_filename)
 output_filename_unzip = output_filename[:-3]
