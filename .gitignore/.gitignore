@@ -2,3 +2,8 @@
 **/.DS_Store
 zequencer.smk
 extra
+extra/**
+extra/*
+zequencer.smk
+rename_files.py
+zequencer.smk

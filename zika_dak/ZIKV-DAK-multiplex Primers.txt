@@ -1,0 +1,320 @@
+ZIKVAfrican_40_R
+
+GCGTCAATAT GCTGTTTTGC GT                                          22
+
+ZIKVAfrican_40_F
+
+TGGTGCGTAG GATCATAGGT GA                                          22
+
+ZIKVAfrican_39_R
+
+CTGACTAGCA GGCCTGACAA CA                                          22
+
+ZIKVAfrican_39_F
+
+GCTGTGCCAA TTGACTGGGT AC                                          22
+
+ZIKVAfrican_38_R
+
+TGGTCGTTCT CCTCAATCCA CA                                          22
+
+ZIKVAfrican_38_F
+
+CTCGACTGGA TGGAGCAATT GG                                          22
+
+ZIKVAfrican_37_R
+
+GCTCGGCCAA TCAGTTCATC TT                                          22
+
+ZIKVAfrican_37_F
+
+AGGGAGCGGA CAAGTTGTTA CT                                          22
+
+ZIKVAfrican_36_R
+
+TCTCTGGCTT CCTCAACAAC CA                                          22
+
+ZIKVAfrican_36_F
+
+CCTAGAAGAA ATGAACCGGG CAC                                         23
+
+ZIKVAfrican_35_R
+
+TGTGCCCTTC TTCCATCTGG TT                                          22
+
+ZIKVAfrican_35_F
+
+AACACCACCT GAGAGGAGAG TG                                          22
+
+ZIKVAfrican_34_R
+
+ATCTGGCTCC CAACCACATG TA                                          22
+
+ZIKVAfrican_34_F
+
+TAGCTATGAC TGACACCACG CC                                          22
+
+ZIKVAfrican_33_R
+
+CCAGCTCCTT CCATAGCCAA GA                                          22
+
+ZIKVAfrican_33_F
+
+AGGCCAGTGA AATATGAGGA GGA                                         23
+
+ZIKVAfrican_32_R
+
+TGGTAGGCCC ATGTCCTGTA TG                                          22
+
+ZIKVAfrican_32_F
+
+ATGGTGGGAG ACTGGCTTGA AA                                          22
+
+ZIKVAfrican_31_R
+
+TCTGACTAAT CCTCCCCCAT GC                                          22
+
+ZIKVAfrican_31_F
+
+GTTGACCTTG GATGTGGCAG AG                                          22
+
+ZIKVAfrican_30_R
+
+TGTTCCACCC ATAGCTTTGC AC                                          22
+
+ZIKVAfrican_30_F
+
+CGGTCTGGTT AAGAGACGTG GA                                          22
+
+ZIKVAfrican_29_R
+
+ACTTCGGTGA TGCCTGACTT TT                                          22
+
+ZIKVAfrican_29_F
+
+GACCCCCAAG TGGAGAAGAA GA                                          22
+
+ZIKVAfrican_28_R
+
+TGGAGAGCCT TCCCATAAGG TG                                          22
+
+ZIKVAfrican_28_F
+
+ACACAAGCTG GAGTGCTGTT TG                                          22
+
+ZIKVAfrican_27_R
+
+CACAAGCAGA ATGATGGCCA CT                                          22
+
+ZIKVAfrican_27_F
+
+GGCAATCATC ATCATGGTGG CA                                          22
+
+ZIKVAfrican_26_R
+
+AATCCCATGG TTGTCCCCTC TT                                          22
+
+ZIKVAfrican_26_F
+
+AACTGCCGGA GACCTTAGAG AC                                          22
+
+ZIKVAfrican_25_R
+
+CAAGGGTTAC CATTCCGAAG CC                                          22
+
+ZIKVAfrican_25_F
+
+AGACAGTGTA CCAGCAGAGG TG                                          22
+
+ZIKVAfrican_24_R
+
+CCAGCGGCAA ATTCTTTGAA CG                                          22
+
+ZIKVAfrican_24_F
+
+GATGAAGACC ATGCACACTG GC                                          22
+
+ZIKVAfrican_23_R
+
+GCTTGAACTC TCCCTCAATG GC                                          22
+
+ZIKVAfrican_23_F
+
+GGGTCATACA GCTCAGCAGG AA                                          22
+
+ZIKVAfrican_22_R
+
+GAATCTATGA CCCGGTCAGC CT                                          22
+
+ZIKVAfrican_22_F
+
+AACAAGGGTT GAAATGGGCG AG                                          22
+
+ZIKVAfrican_21_R
+
+GGCTCTCTCT GGAACTTCCA CT                                          22
+
+ZIKVAfrican_21_F
+
+TCCTGAAATA GTCCGTGAAG CCA                                         23
+
+ZIKVAfrican_20_R
+
+GTGACGTTGA CTGCTGTTGT CA                                          22
+
+ZIKVAfrican_20_F
+
+TGCCTGGAAT ATTCAAGACA AAGGA                                       25
+
+ZIKVAfrican_19_R
+
+ACAACCCCAT TGCCATAAAG TCC                                         23
+
+ZIKVAfrican_19_F
+
+AAAGGAGAGA CTACAGATGG AGTGT                                       25
+
+ZIKVAfrican_18_R
+
+CTCCTTTTGT GACGTGCCAC AT                                          22
+
+ZIKVAfrican_18_F
+
+AAAAAGACGC GGAAGTCACT GG                                          22
+
+ZIKVAfrican_17_R
+
+CACAGATGGC CATCAGAACC AC                                          22
+
+ZIKVAfrican_17_F
+
+GGTTGACCGC TGTGAGGATA GT                                          22
+
+ZIKVAfrican_16_R
+
+CCAGTGCACA TATCAGGCCA AC                                          22
+
+ZIKVAfrican_16_F
+
+CGATCTCTGC TCTTGAAGGC GA                                          22
+
+ZIKVAfrican_15_R
+
+GGCTAATGGT GTTAGAGCAG CC                                          22
+
+ZIKVAfrican_15_F
+
+CACATCAATG GCAGTGCTGG TA                                          22
+
+ZIKVAfrican_14_R
+
+TGCCAAGTGA GCTACATCTC CT                                          22
+
+ZIKVAfrican_14_F
+
+GGAATGGTGC TGTAGGGAAT GC                                          22
+
+ZIKVAfrican_13_R
+
+GTTGATCCTG CTGTCACCAT GG                                          22
+
+ZIKVAfrican_13_F
+
+CAGATGGAGT GGAAGAAAGT GATCT                                       25
+
+ZIKVAfrican_12_R
+
+CCTCAAACCG GATTTCGAGC TC                                          22
+
+ZIKVAfrican_12_F
+
+CTGAAGGAGT GTCCGCTCAA AC                                          22
+
+ZIKVAfrican_11_R
+
+CCTTTCCCTT GACAGCTGTT CC                                          22
+
+ZIKVAfrican_11_F
+
+TCGAGAATGG AAAACATCAT GTGGA                                       25
+
+ZIKVAfrican_10_R
+
+GCAATCTCTG TGGACCTCTC CA                                          22
+
+ZIKVAfrican_10_F
+
+TGGATCTATC TCCCTCACAT GCT                                         23
+
+ZIKVAfrican_9_R
+
+CGTGCCACAT CTCGTTTCCT TT                                          22
+
+ZIKVAfrican_9_F
+
+AAATCACCCA TCACTGGCAT CG                                          22
+
+ZIKVAfrican_8_R
+
+CACACCCCCA ACTGATCCAA AG                                          22
+
+ZIKVAfrican_8_F
+
+AAGGTCCCAG CTGAAACATT GC                                          22
+
+ZIKVAfrican_7_R
+
+TTATCAGCCT TCCAACTGGG GT                                          22
+
+ZIKVAfrican_7_F
+
+ACACTGGAAC AACAAAGAGG CA                                          22
+
+ZIKVAfrican_6_R
+
+ATCCATCTCA GCCTCCAAAG CT                                          22
+
+ZIKVAfrican_6_F
+
+TGCTATCAGT GCATGGATCC CA                                          22
+
+ZIKVAfrican_5_R
+
+AAGGTTGCTT CTGCTCTTGG TG                                          22
+
+ZIKVAfrican_5_F
+
+GTTGGTCACG ACAACGGTTA GC                                          22
+
+ZIKVAfrican_4_R
+
+GCTTGTCAAG GTAGGCTTCA CC                                          22
+
+ZIKVAfrican_4_F
+
+TCAAGGTTGA AAATTGGATA TTCAGGAAC                                   29
+
+ZIKVAfrican_3_R
+
+CCGGGGCAAT CAACAATATC ATGA                                        24
+
+ZIKVAfrican_3_F
+
+TACAGATCAT GGACCTCGGG CA                                          22
+
+ZIKVAfrican_2_R
+
+CAGGTTCCGT ACACAACCCA AG                                          22
+
+ZIKVAfrican_2_F
+
+CCATCACTGG GCCTCATCAA TAG                                         23
+
+ZIKVAfrican_1_R
+
+CACGTCTCTT CCTCTCCTTC CT                                          22
+
+ZIKVAfrican_1_F
+
+ACAGTTCGAG TTTGAAGCGA GAG                                         23
+

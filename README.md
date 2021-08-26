@@ -202,6 +202,23 @@ docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
  --minallelefraction 0.01 \
  --rarity 0.01 \
  --strict_adaptors t
+ 
+ # Example for using zika:
+ # Zika reference sequences and bed files are not stored in the dockerfile 
+ # You can still set them to an external volume
+ 
+/zequencer.sh \
+ --sample_dir ~/sample_dir \
+ --minallelefraction 0.01 \
+ --rarity 0.01 \
+ --strict_adaptors t \
+ --fast_normalize t \
+ --reads_per_amplicon 2000 \
+ --ref_path ~/zequencer_ncov19/ref/KX601166.2.fa \
+ --ref_adaptor_path ~/zequencer_ncov19/zika_dak/zikv_dak_primers.fasta \
+ --bed_path ~/zequencer_ncov19/zika_dak/zikv_dak.bed \
+ --config_path ~/zequencer_ncov19/ref/KX601166.2.config \
+ --ncbi_accession KX601166.2
 ```
 
 # About fast_normalize downsampling normalization
