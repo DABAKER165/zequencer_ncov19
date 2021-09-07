@@ -152,7 +152,7 @@ if (ref_fasta_filepath is not None) and (bed_filepath is not None):
     # zero is the first position
     df_bed = pd.read_csv(bed_filepath, sep='\t', header=None,
                          names=['SEQ_ID', 'START', 'END', 'AMPLICON_ID', 'AMPLICON_GROUP', 'SYMBOL'])
-    primer_fasta_filepath = os.path.join(outdir, 'nCoV-2019_primer.fasta')
+
 
     fasta_sequences = SeqIO.parse(open(ref_fasta_filepath), 'fasta')
     # only one sequence so
@@ -164,11 +164,25 @@ if (ref_fasta_filepath is not None) and (bed_filepath is not None):
     df_bed = pd.read_csv(bed_filepath, sep='\t', header=None,
                          names=['SEQ_ID', 'START', 'END', 'AMPLICON_ID', 'AMPLICON_GROUP', 'SYMBOL'])
 
-    df_bed['PRIMER_SEQUENCE'] = [sequence[int(x):int(y)] for x, y in zip(df_bed['START'], df_bed['END'])]
-
     df_bed['SIDE'] = [x.split('_')[2] for x in df_bed['AMPLICON_ID']]
     df_bed['AMPLICON'] = ['_'.join(x.split('_')[:2]) for x in df_bed['AMPLICON_ID']]
-    df_bed['PRIMER_SEQUENCE'] = [x if y.upper() == 'LEFT' else str(Seq(x).reverse_complement()) for x, y in zip(df_bed['PRIMER_SEQUENCE'], df_bed['SIDE'])]
+
+    if (primer_fasta_filepath is not None):
+        print('Using primer_fasta')
+        fasta_sequences = SeqIO.parse(open(primer_fasta_filepath), 'fasta')
+        # only one sequence so
+        df_primer = pd.DataFrame({})
+        for fasta in fasta_sequences:
+            name, sequence = fasta.id, str(fasta.seq)
+            new_row = {'AMPLICON_ID': name, 'PRIMER_SEQUENCE': sequence, 'AMPLICON': '_'.join(name.split('_')[:2]),
+                       'SIDE': name.split('_')[2]}
+            df_primer = df_primer.append(new_row, ignore_index=True)
+        df_bed = df_bed.merge(df_primer, on=['AMPLICON_ID', 'AMPLICON', 'SIDE'], how='inner')
+    else:
+
+        primer_fasta_filepath = os.path.join(outdir, 'primers.fasta')
+        df_bed['PRIMER_SEQUENCE'] = [sequence[int(x):int(y)] for x, y in zip(df_bed['START'], df_bed['END'])]
+        df_bed['PRIMER_SEQUENCE'] = [x if y.upper() == 'LEFT' else str(Seq(x).reverse_complement()) for x, y in zip(df_bed['PRIMER_SEQUENCE'], df_bed['SIDE'])]
 
     df_adapt = df_bed
     group_by_list = ['AMPLICON', 'SIDE']

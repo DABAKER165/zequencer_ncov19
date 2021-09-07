@@ -1,13 +1,13 @@
 #Summary
-#Generated on	Mon Mar 08 21:27:21 UTC 2021
+#Generated on	Fri Aug 27 19:12:47 UTC 2021
 #Version	5
 chroms	1
-bases	45903
-defined	29903
+bases	26675
+defined	10675
 undefined	16000
 contigs	1
 scaffolds	1
 interpad	300
-source	/Volumes/dabaker_drive1/zequencer/south_africa/run1/ref/MN908947.3.fasta
-bytes	30498
-last modified	1590126711000
+source	/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/ref/KU501215.1.fa
+bytes	10865
+last modified	1630091520000

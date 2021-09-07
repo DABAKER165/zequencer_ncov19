@@ -14,6 +14,7 @@ pipeline_dir = sys.argv[1]
 ncbi_accession = sys.argv[2]
 email = sys.argv[3]
 
+print(pipeline_dir, ncbi_accession, email)
 Entrez.email = email  # Always tell NCBI who you are
 
 # Downloading...
