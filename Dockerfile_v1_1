@@ -1,0 +1,3 @@
+FROM  dockerreg.chtc.wisc.edu/dabaker3/zequencer_ncov19:v1
+RUN rm -f /trim_strict.py
+COPY trim_strict.py /trim_strict.py

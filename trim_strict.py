@@ -102,7 +102,7 @@ in_merged_filepath = args.in_merged_filepath
 outdir = args.outdir
 ref_fasta_filepath = args.ref_fasta_filepath
 primer_fasta_filepath = args.primer_fasta_filepath
-
+print('start trim strict')
 
 def test_primer_pairs(record, amplicon_pairings,
                       trim_primer=True,
@@ -188,9 +188,9 @@ if (ref_fasta_filepath is not None) and (bed_filepath is not None):
     group_by_list = ['AMPLICON', 'SIDE']
     df_bed_grouped = df_bed.groupby(group_by_list).agg({'START': 'min',
                                                         'END': 'max'}).reset_index()
-
+    # print(df_bed_grouped)
     df_bed_pivot = df_bed_grouped.pivot_table(index='AMPLICON', columns='SIDE', values=['START', 'END']).reset_index()
-
+    # print(df_bed_pivot)
     df_bed_pivot.columns = df_bed_pivot.columns.to_series().str.join('_')
     df_bed_pivot.rename(columns={'AMPLICON_': 'AMPLICON'}, inplace=True)
 
