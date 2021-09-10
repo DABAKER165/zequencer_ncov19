@@ -141,7 +141,7 @@ docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
 
 ```
 # Example usage:
-- Volumes have been mounted using the above Docker code
+- Volumes have been mounted using the above Docker code where the files are in the root directory ("/")
 - In this example, the sample_dir is "/Volumes/T7/zequencer/south_africa/samples"
 - Change this path to reflect your sample directory of paired fastq.gz files
 - The paired files must have nomenclature of: SAMPLE_NAME-R1.fastq.gz and SAMPLE_NAME-R2.fastq.gz
@@ -219,6 +219,20 @@ docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
  --bed_path ~/zequencer_ncov19/zika_dak/zikv_dak.bed \
  --config_path ~/zequencer_ncov19/ref/KX601166.2.config \
  --ncbi_accession KX601166.2
+ 
+ # Example using Zika-PR where there is mismatches in teh primer sequences to the reference:
+/zequencer.sh \
+ --sample_dir ~sample_dir \
+ --minallelefraction 0.01 \
+ --rarity 0.01 \
+ --strict_adaptors f \
+ --fast_normalize t \
+ --reads_per_amplicon 2000 \
+ --ref_path ~/zequencer_ncov19/ref/KU501215.1.fa \
+ --ref_adaptor_path ~/zequencer_ncov19/zikv_PR/zikv_PR_primers.fasta \
+ --bed_path ~/zequencer_ncov19/zikv_PR/zikv_PR.bed \
+ --config_path ~/zequencer_ncov19/ref/KU501215.1.config \
+ --ncbi_accession KU501215.1
 ```
 
 # About fast_normalize downsampling normalization
