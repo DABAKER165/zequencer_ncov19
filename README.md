@@ -1,19 +1,33 @@
-# Zequencer Update for SARS2-COVID-19
+# Zequencer
 - Zequencer is a variant calling pipeline that has been optimized for Illumina's MiSeq generated reads
 - It assumes: 
     - The reads are that high quality, high accuracy as expected with a properly calibrated MiSeq platform.
-    - Input files are in the fastq.gz format 
-    - Input files use the were generated with the artic ncov-2019 v3 primers.
-    - more information is located at https://artic.network/ncov-2019 
+    - Input files are in the -R1.fastq.gz / -R2.fastq.gz format, 2 separate fastq.gz files.
+    - A single sequence reference fasta file for the reference sequence.
+    - A header-less, tab-delimited bed file with:
+      - (at least) Sequence_Name,	START_POSITION, END_POSITION, PRIMER_NAME, PRIMER_GROUP
+        - The primer name is underscore delimited: 
+          - NAME_PRIMER-GROUP-NUMBER_LEFT-OR-RIGHT_ALT
+          - Some primer kits have alternate primers that pair.
+          - eg. SARS-CoV-2_4_LEFT SARS-CoV-2_4_RIGHT, SARS-CoV-2_5_RIGHT_alt2
+        - PRIME_GROUP is a primers that do not overlap, there is often two groups.
     - File names are of the naming format SAMPLE_NAME-R1.fastq.gz and SAMPLE_NAME-R2.fastq.gz
         - Where R1 is the has one set of reads, and R2 has the matching reverse paired reads.
     - headers are in the miseq nomenclature:
         - example @M01472:366:000000000-JDJFD:1:1101:14487:2478 2:N:0:15 matches to: 
         @M01472:366:000000000-JDJFD:1:1101:14487:2478 1:N:0:15
-- Additional Files needed for each run:
-     - bed file that gives the start and end location of each primer agains the reference sequence
-     - reference sequence fasta of the full genome (reference genome fasta that the bed file mapped)
-     - snpEff configuration files that was build with snpEff build
+        
+    
+# Update for version 2
+- Version 2 uses snakemake to manage the multithreaading.
+- It can also skip steps that already has the output files' existing (such as pulling the configuration files from NCBI)
+- The major difference is it must be configured with a json configuration file.
+- The config file allows setting arguments on a per rule basis, in case a argument needs to be set differently in a different step of the pipeline.
+- Additionally, any valid argument can be set in the bioinformatic tools
+    - Priority is as follows:
+        1. Argument settings in the config file that is declared in the snakemake command line call
+        2. Argument settings in the default config file (.src/variant_calling_rules.json)
+        3. Argument settings defaults of the bioinformatic tool
  
  ## Considerations for using this version of Zequencer
 - Zequencer has been modified over the years.
@@ -42,11 +56,188 @@
 - Not all pipelines work for all situations.  Do not blindly apply this pipeline to another primer/adapter system. 
    
      
-# Arguments
-- Defaults are based on the docker deployed version.
-- Bed path, ref_adaptor_path, ref_path and config_path should be changed as needed.
-- Many of these settings directly change the arguments of the BBMAP suite of tools
-- Setting strict_adaptors to TRUE will use a custom script to locate the primers, ensure they are a perfect match, a matching reverse paired end, occur on the ends, and trim the primers.
+# Arguments with sequencer 2.0
+- There are 2 main workflows:
+  - CUSTOM WORKFLOW
+    - Merge forward and reverse reads (bbduk), 
+    - map read with to make bam file (bbmap), 
+    - Collate (randomize) reads (samtools)
+    - custom filtering, masking, downsampling algorithm
+      - Creates 3 files: a single BAM file, a file with group 1 primers only and a file with group 2 primers
+    - variant calling and annotating (bbmap call variants, SNPeff)
+  - Mirrored Previous Version of zequencer
+    - BBMAP package Trimming/Filtering (bbduk) and amplicon mapping downsampling, 
+    - mapping reads to make bam file (bbamp), 
+    - filter reads for length (bbmap reformat)
+    - variant calling and annotating (bbmap call variants, SNPeff)
+## The config file
+  - JSON format
+  - each rule based (dictionary) using the same arguments as their respective bioinformatic packages.
+### Default Configuration
+  - Snakemake can use relative paths (to the current working directory of where the workflow is launched or absolute paths.
+    - This may be a different directory than where snakemake file exists
+  - The first settings: ref_dir, out_dir, input_dir, ram & skip_downsample 
+```json
+{
+  "ref_dir": "ref",
+  "out_dir": "out",
+  "input_dir": "./",
+  "ram": "8000",
+  "use_amplicon_norm_bbduk_trim": "f",
+  "bbmap_merged_reads": {
+    "maxindel": "100",
+    "overwrite": "t",
+    "nodisk": "t"
+  },
+  "filter_downsample_mask_bam": {
+    "--primer_max_ins": "0",
+    "--primer_max_sub": "1",
+    "--primer_max_del": "0",
+    "--downsample": "t"
+  },
+  "bbmap_call_variants": {
+    "minallelefraction": "0.001",
+    "rarity": "0.001",
+    "coverage": "t",
+    "calldel": "t",
+    "callins": "t",
+    "callsub": "t",
+    "mincov": "2",
+    "minreads": "7",
+    "minscore": "10",
+    "minquality": "10",
+    "overwrite": "t",
+    "minstrandratio": "0",
+    "minpairingrate": "0",
+    "usebias": "f",
+    "useedist": "f",
+    "useidentity": "f",
+    "minedist": "0",
+    "border": "0",
+    "trimq": "0",
+    "nscan": "f",
+    "minreadmapq": "0",
+    "minqualitymax": "10",
+    "covpenalty": "0"
+  },
+  "bbduk_filter_primer_reads": {
+    "k": "21",
+    "hdist": "3",
+    "rcomp": "f",
+    "minlength": "75",
+    "restrictleft": "32",
+    "overwrite": "t"
+  },
+  "bbduk_trim_primer_and_quality": {
+    "ktrim": "l",
+    "k": "21",
+    "qtrim": "rl",
+    "trimq": "30",
+    "hdist": "3",
+    "rcomp": "f",
+    "minlength": "75",
+    "restrictleft": "32",
+    "overwrite": "t"
+  },
+  "slow_amplicon_normalization": {
+    "--reads_per_amplicon": "2000",
+    "--min_length_diff": "60",
+    "--include_primer": "f"
+  },
+  "bbmap_reformat_trim_read_length": {
+    "maxlength": "450",
+    "minlength": "250",
+    "overwrite": "t"
+  },
+  "bbmap_filtered_trimmed": {
+    "maxindel": "100",
+    "overwrite": "t",
+    "nodisk": "t"
+  }
+}
+
+
+
+```
+### Run based Custom Configuration
+- any declared key-value pair or key-list (if applicable) pair will be overwrite defaults.
+- if only one key-value pare of the dictionary is changed, than only that entry will be overwritten, the rest will remain.
+- This example will run the amplicon based downsampling and bbduk trimming/filtering:
+- The file in this example is named ~/zequencer_configs/variant_calling_rules_ncov_v4.json
+```json
+{
+  "ncbi_accession": "MN908947.3",
+  "email": "username@domain.edu",
+  "bed_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.scheme.bed",
+  "ref_fasta_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.reference.fasta",
+  "ref_adaptor_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer.fasta",
+  "config_path": "~/zequencer_ncov19/ref/MN908947.3.config",
+  "ref_dir": "~/zequencer_ncov19/ref",
+  "out_dir": "~/covid_19_v4/out_23",
+  "primer_amplicon_path" : "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer_amplicon.csv",
+  "input_dir": "~/covid_19_v4",
+  "src_dir": "/src",
+  "use_amplicon_norm_bbduk_trim": "t"
+}
+```
+- This example will run the custom trimming/filtering step:
+```json
+{
+  "ncbi_accession": "MN908947.3",
+  "email": "username@domain.edu",
+  "bed_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.scheme.bed",
+  "ref_fasta_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.reference.fasta",
+  "ref_adaptor_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer.fasta",
+  "config_path": "~/zequencer_ncov19/ref/MN908947.3.config",
+  "ref_dir": "~/zequencer_ncov19/ref",
+  "out_dir": "~/covid_19_v4/out_23",
+  "primer_amplicon_path" : "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer_amplicon.csv",
+  "input_dir": "~/covid_19_v4",
+  "src_dir": "/src",
+  "use_amplicon_norm_bbduk_trim": "f"
+}
+```
+- This example will run the custom trimming/filtering step and change reads_per_amplicon downsampling from 800 to 1000
+```json
+{
+  "ncbi_accession": "MN908947.3",
+  "email": "username@domain.edu",
+  "bed_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.scheme.bed",
+  "ref_fasta_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.reference.fasta",
+  "ref_adaptor_path": "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer.fasta",
+  "config_path": "~/zequencer_ncov19/ref/MN908947.3.config",
+  "ref_dir": "~/zequencer_ncov19/ref",
+  "out_dir": "~/covid_19_v4/out_23",
+  "primer_amplicon_path" : "~/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer_amplicon.csv",
+  "input_dir": "~/covid_19_v4",
+  "src_dir": "/src",
+  "use_amplicon_norm_bbduk_trim": "f",
+  "filter_downsample_mask_bam": {
+    "--primer_max_ins": "1",
+    "--primer_max_sub": "1",
+    "--primer_max_del": "1",
+    "--downsample": "t",
+    "--reads_per_amplicon": "1000"
+  }
+}
+```
+# Running Pipeline:
+- Running from docker is recommended but still optional.
+  - Note: If using docker the ~/ as a shortcut points to the home directory of the image, not the mount
+```bash
+# launch the docker as needed (optional)
+docker -it -v /home:/home zequencer:v2
+# launch the snakemake workflow
+snakemake --snakefile ~/zequencer_ncov19/zequencer.smk \
+--cores 1 \
+--configfile ~/zequencer_configs/variant_calling_rules_ncov_v4.json
+```
+
+## Select defualts:
+  - Defaults are based on the docker deployed version.
+  - Bed path, ref_adaptor_path, ref_path and config_path should be changed as needed.
+  - Many of these settings directly change the arguments of the BBMAP suite of tools
+  - Setting strict_adaptors to TRUE will use a custom script to locate the primers, ensure they are a perfect match, a matching reverse paired end, occur on the ends, and trim the primers.
 
 | ﻿argument               | single_character | type    | default                     | help                                                                                                                                                                                                                                                              |
 | ----------------------- | ---------------- | ------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -97,28 +288,26 @@ This pipeline has been successfully tested on the following operating systems:
 MacOSX 10.14 with some packages installed with homebrew.
 Ubuntu 18.04, 64 bit
 Debian (Buster 10.8, 64 bit)
-It is not compatable with a native Windows operating system (see docker instructions for Windows's operating systems)
-
-
+It is not compatible with a native Windows operating system (see docker instructions for Windows's operating systems)
+List of packages and relevant versions:
 ```
 BBMap_38.90.tar.gz
 bcftools 
-samtools
-htslib-1.12 (bgzip, tabix)
+samtools 1.11
+htslib-1.11-4 (bgzip, tabix)
 VarScan.v2.4.4.jar
-snpEff_latest_core
+snpEff_latest_core 5.0e
 seqtk-1.3
 openjdk=11.0.1
 python3 (3.5 to 3.7)
-snakmake (for future workflow)
+snakmake 1.6
 biopython 1.76
 pyfasta
-pandas
+pandas 1.3.1
 ```
 Additional files from this github repository (for COVID-19)
-trim_strict.py
-ncov-2019_adapters.fasta
-zequencer.sh
+src -- directory and contents
+zika_dak -- directory and contents
 nCoV-2019 -- directory and contents
 ref -- directory and contents
 ## Method 2 docker:
@@ -131,111 +320,17 @@ Download the directory zequencer_docker from github.
 Decompress the directory as needed, and change to the directory you downloaded.
 example if downloaded to you home directory ~/:
 ```bash
-cd ~/zequencer_docker
+cd ~/zequencer_ncov19
 # zequencer_ncov:v1 can be changed to a different tag as needed
-docker build -t zequencer_ncov:v1 .
+docker build -t zequencer_ncov:v2 .
 # run docker image (this uses in interactive mode, but interactive mode is not required), 
 # mounted volumes with -v can be changed as needed
 # cpus can be changed as needed
-docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
+docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v2
 
 ```
-# Example usage:
-- Volumes have been mounted using the above Docker code where the files are in the root directory ("/")
-- In this example, the sample_dir is "/Volumes/T7/zequencer/south_africa/samples"
-- Change this path to reflect your sample directory of paired fastq.gz files
-- The paired files must have nomenclature of: SAMPLE_NAME-R1.fastq.gz and SAMPLE_NAME-R2.fastq.gz
-- I am using the default relative path (that is created if it does not exist of ../out )
-    - Which for this case is: /Volumes/T7/zequencer/south_africa/out
-```bash
-# downsample to 2000 reads per amplicon, 
-# when calling variants use: allele fraction of 0.01 
-# and use BBDUK
- /zequencer.sh \
- --sample_dir /Volumes/T7/zequencer/south_africa/samples \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors f \
- --fast_normalize f \
- --reads_per_amplicon 2000
- 
- # Do not downsample (much faster),reads per amplicon, 
- # when calling variants use:allele fraction of 0.01 
- # and use BBDUK
- # you can also set reads_per_amplicon to 0 instead of blank.
- /zequencer.sh \
- --sample_dir /Volumes/T7/zequencer/south_africa/samples \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors f \
- --fast_normalize f
 
- # Downsample to 2000 reads per amplicon(,reads per amplicon,
- # when calling variants use:  allele fraction of 0.01 
- # filter using only exact and paired matches of primers that are at the end of reads
- /zequencer.sh \
- --sample_dir /Volumes/T7/zequencer/south_africa/samples \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors t \
- --fast_normalize f \
- --reads_per_amplicon 2000
- 
- # Downsample to 2000 reads per amplicon(,reads per amplicon,
- # when calling variants use:  allele fraction of 0.01 
- # filter using only exact and paired matches of primers that are at the end of reads
- # use a faster upto 100x algorithm (safe for the ncov2019, V3 primer set).
- /zequencer.sh \
- --sample_dir /Volumes/T7/zequencer/south_africa/samples \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors t \
- --fast_normalize t \
- --reads_per_amplicon 2000
- 
- 
- # when calling variants use:  allele fraction of 0.01 
- # filter using only exact and paired matches of primers that are at the end of reads
- # Fastest option, but does not downsample.
- /zequencer.sh \
- --sample_dir /Volumes/T7/zequencer/south_africa/samples \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors t
- 
- # Example for using zika:
- # Zika reference sequences and bed files are not stored in the dockerfile 
- # You can still set them to an external volume
- 
-/zequencer.sh \
- --sample_dir ~/sample_dir \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors t \
- --fast_normalize t \
- --reads_per_amplicon 2000 \
- --ref_path ~/zequencer_ncov19/ref/KX601166.2.fa \
- --ref_adaptor_path ~/zequencer_ncov19/zika_dak/zikv_dak_primers.fasta \
- --bed_path ~/zequencer_ncov19/zika_dak/zikv_dak.bed \
- --config_path ~/zequencer_ncov19/ref/KX601166.2.config \
- --ncbi_accession KX601166.2
- 
- # Example using Zika-PR where there is mismatches in teh primer sequences to the reference:
-/zequencer.sh \
- --sample_dir ~sample_dir \
- --minallelefraction 0.01 \
- --rarity 0.01 \
- --strict_adaptors f \
- --fast_normalize t \
- --reads_per_amplicon 2000 \
- --ref_path ~/zequencer_ncov19/ref/KU501215.1.fa \
- --ref_adaptor_path ~/zequencer_ncov19/zikv_PR/zikv_PR_primers.fasta \
- --bed_path ~/zequencer_ncov19/zikv_PR/zikv_PR.bed \
- --config_path ~/zequencer_ncov19/ref/KU501215.1.config \
- --ncbi_accession KU501215.1
-```
-
-# About fast_normalize downsampling normalization
+# About fast_normalize downsampling vs amplicon mapping normalization
 - The existing nomalization was developed by Dr. Nick Loman, Professor of Microbial Genomics and Bioinformatics at  University of Birmingham, and adapted by Dr. David O'Connors lab (fast_normalize = false) maps each read to each primer (all 196+)
     - Then it will only retain up to the amount defined in reads_per_adaptor per each mapped primer
     - Example: 
@@ -245,15 +340,27 @@ docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
 - The fast_normalize method also downsamples, but does only one mapping step (instead of one per primer), and uses the position the start position of the mapped read to the reference and the positions of the primers in the bed file
     - This uses a custom python script and pysam to conduct the filtering.
     - This has been shown to be upto 100x faster than the other downsampling method
-    - This mimics the algorithm used in Nexstrain's Minion step for ONT downsampling.
+    - This is similar to the algorithm used in Nexstrain's Minion step for ONT downsampling.
     - The main advantage is speed, however if a future primer set is developed with primers that are specialized to find variants, this technique is not adequate for downsampling.
     - Generally downsampling is optional, as the primer sets use the same reference sequence and is more to try to get a more accurate percentage for a variant in the case of one primer in an overlapping region doing better to amplify reads than another primer.
+
+# Primer matching algorithms.
+- This zequencer has added a custom filtering/trimming step
+- It makes sure that the forward and corresponding reverse primers are part of the matched pair
+- Reports percentage of Exact, Partial exact, and single primer matches
+- Allows for "approximate" primer matches based on settings:
+  - primer_max_ins (insertions) 
+  - primer_max_del (deletions)
+  - primer_max_sub (substitutions)
+- Checks if the overlapping regions of primer groups coincide in the variant calls, and gives a report of non-matches between groups.
+
 # Trouble shooting:
 - set rem_int_files to false (--rem_int_files f) to keep the intermediate files generated by the pipeline.  This will require about 5-10x more hardrive space but may help figure out issues
 - During testing docker has randomly lost the ability to use relative paths because cwd or pwd failed on the  mounted Volumes.  
     - You will see this as a "pwd cannot find ." or "os.getcwd()" error. 
     - using the command "pw"d will result in an error in bash.
     - Exiting and rerunning the docker image and/or restarting docker resolved this issue  during testing
+  
 # Citations
 - BBMAP
     - Bushnell, Brian. BBMap: A Fast, Accurate, Splice-Aware Aligner. United States: N. p., 2014.
@@ -285,7 +392,3 @@ docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v1
 - Dr. Nick Loman, Professor of Microbial Genomics and Bioinformatics at  University of Birmingham and Shelby O'Connor, Associate Professor, Department of Pathology and Laboratory Medicine at the University of Wisconsin 
 - John (JJ) Baczenas: Associate Research Specialist in Department of Pathology and Laboratory Medicine at the University off Wisconsin for defining Pipeline criteria, generating test data, and QA testing.
 - Katarina (Kat) Braun, MD-PhD, and Gage Moreno PhD students in Department of Pathology and Laboratory Medicine at the University of Wisconsin for defining pipeline criteria and generating test data.
-
-
-# Roadmap items (future)
-- Add Snakemake capability to manage threads and process multiple files concurrently

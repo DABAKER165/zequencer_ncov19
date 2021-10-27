@@ -34,8 +34,9 @@ def parse_process_arrays_args(parser: ArgumentParser):
                         required=True)
     parser.add_argument('--outdir',
                         type=str,
+                        default=None,
                         help='filepath where the output ends up.',
-                        required=True)
+                        required=False)
     parser.add_argument('--min_length_diff',
                         type=int,
                         default=60,
@@ -86,12 +87,15 @@ print(sys.argv)
 print(args)
 downsampling_fasta_path = args.downsampling_fasta_path
 reads_per_amplicon = args.reads_per_amplicon
-outdir = args.outdir
+
 min_length_diff = args.min_length_diff
 bed_path = args.bed_path
 ref_path = args.ref_path
 merged_fasta_path = args.merged_fasta_path
+outdir = args.outdir
 output_filename = args.output_filename
+if outdir is None:
+    outdir = os.path.dirname(output_filename)
 include_primer = args.include_primer
 ram = args.ram
 tmp_dir = outdir
@@ -214,7 +218,7 @@ for fn in os.listdir(SPLIT_REF_DIR):
                                'out={0}'.format(os.path.join(filtered_reads_dir, '{0}.filtered.fastq.gz'.format(fn))),
                                'minlength=' + MIN_LENGTH])], shell=True)
 
-    # downsample filtered reads so each amplicon has same number of reads
+    # downsample filtered reads so each amplicon has same number of maximum reads
     # use seqtk to filter
     # save stdout from seqtk sample to file
 

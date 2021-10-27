@@ -1,0 +1,79 @@
+{
+  "ref_dir": "ref",
+  "out_dir": "out",
+  "input_dir": "./",
+  "ram": "8000",
+  "use_amplicon_norm_bbduk_trim": "f",
+  "bbmap_merged_reads": {
+    "maxindel": "100",
+    "overwrite": "t",
+    "nodisk": "t"
+  },
+  "filter_downsample_mask_bam": {
+    "--max_ins": "1",
+    "--max_sub": "1",
+    "--max_del": "1",
+    "--downsample": "t",
+    "--reads_per_amplicon": "1000"
+  },
+  "bbmap_call_variants": {
+    "minallelefraction": "0.001",
+    "rarity": "0.001",
+    "coverage": "t",
+    "calldel": "t",
+    "callins": "t",
+    "callsub": "t",
+    "mincov": "2",
+    "minreads": "7",
+    "minscore": "10",
+    "minquality": "10",
+    "overwrite": "t",
+    "minstrandratio": "0",
+    "minpairingrate": "0",
+    "usebias": "f",
+    "useedist": "f",
+    "useidentity": "f",
+    "minedist": "0",
+    "border": "0",
+    "trimq": "0",
+    "nscan": "f",
+    "minreadmapq": "0",
+    "minqualitymax": "10",
+    "covpenalty": "0"
+  },
+  "bbduk_filter_primer_reads": {
+    "k": "21",
+    "hdist": "3",
+    "rcomp": "f",
+    "minlength": "75",
+    "restrictleft": "32",
+    "overwrite": "t"
+  },
+  "bbduk_trim_primer_and_quality": {
+    "ktrim": "l",
+    "k": "21",
+    "qtrim": "rl",
+    "trimq": "30",
+    "hdist": "3",
+    "rcomp": "f",
+    "minlength": "75",
+    "restrictleft": "32",
+    "overwrite": "t"
+  },
+  "slow_amplicon_normalization": {
+    "--reads_per_amplicon": "2000",
+    "--min_length_diff": "60",
+    "--include_primer": "f"
+  },
+  "bbmap_reformat_trim_read_length": {
+    "maxlength": "450",
+    "minlength": "250",
+    "overwrite": "t"
+  },
+  "bbmap_filtered_trimmed": {
+    "maxindel": "100",
+    "overwrite": "t",
+    "nodisk": "t"
+  }
+}
+
