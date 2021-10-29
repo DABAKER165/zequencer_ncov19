@@ -227,7 +227,7 @@ mismatch_count = 0
 
 
 # you must collate the file FIRST if you want ot downsample asto shuffle the reads
-# primer_amplicon_path = '/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer_amplicon.csv'
+
 df_primer_amp = pd.read_csv(primer_amplicon_path, sep=',')
 amplicon_count_dict = {}
 amplicon_rev_dict = {}

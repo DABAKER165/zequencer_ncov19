@@ -235,6 +235,7 @@ rule bbmap_call_variants:
         in1=path.join(config['out_dir'],"{sample}-downsampled_trimmed_sorted.bam"),
         ref_path=config['ref_fasta_path'],
         config_path=config['config_path']
+        # primer_amplicon_path=config['primer_amplicon_path']
     output:
         vcf=path.join(config['out_dir'],"{sample}.vcf"),
         ann_vcf=path.join(config['out_dir'],"{sample}_ann.vcf"),
@@ -326,9 +327,8 @@ rule bbmap_call_variants:
             df_vcf_1['GROUP'] = 1
             df_vcf_2= read_vcf(vcf2_path)
             df_vcf_2['GROUP'] = 2
-            pa_path = '/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer_amplicon.csv'
-            df_pa = pd.read_csv(pa_path)
-            df_pa2= df_pa.groupby('AMPLICON')[['START_RIGHT','END_LEFT']].agg({'END_LEFT':min, 'START_RIGHT':max}).reset_index()
+            # df_pa = pd.read_csv(config['primer_amplicon_path'])
+            df_pa2= df.groupby('AMPLICON')[['START_RIGHT','END_LEFT']].agg({'END_LEFT':min, 'START_RIGHT':max}).reset_index()
             df_pa2.sort_values(by = ['END_LEFT'], inplace=True)
             end_left = list(df_pa2['END_LEFT'])
             start_right = list(df_pa2['START_RIGHT'])
@@ -592,11 +592,11 @@ rule create_primer_fasta_ref_bed:
         import os
         from pathlib import Path
         bed_path = input.bed_path
-        # bed_path = '/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V3/nCoV-2019.scheme.bed'
+
         ref_fasta_path = input.ref_fasta_path
-        # insert_fasta_path = '/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.insert.fasta'
+
         ref_adaptor_path = output.ref_adaptor_path
-        # primer_fasta_path = '/Users/dabaker3/zequencer/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V4/SARS-CoV-2.primer.fasta'
+
         df_bed_temp=output.df_bed_temp
         if not os.path.isfile(bed_path):
             print("Error Bedfile does not exist")
