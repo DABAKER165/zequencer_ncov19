@@ -226,7 +226,7 @@
   - Note: If using docker the ~/ as a shortcut points to the home directory of the image, not the mount
 ```bash
 # launch the docker as needed (optional)
-docker -it -v /home:/home zequencer:v2
+docker run -it -v /home:/home zequencer:v2
 # launch the snakemake workflow
 snakemake --snakefile ~/zequencer_ncov19/zequencer.smk \
 --cores 1 \
