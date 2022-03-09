@@ -126,6 +126,7 @@ ln -s /usr/bin/varscan.sh /usr/bin/varscan
 COPY ref/ /ref
 COPY nCoV-2019/ /nCoV-2019
 COPY zika_dak /zika_dak
+COPY KU501215_1 /KU501215_1
 COPY zequencer.smk /zequencer.smk
 COPY src/ /src
 ENTRYPOINT ["/bin/bash"]
