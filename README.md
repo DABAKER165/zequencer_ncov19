@@ -329,7 +329,34 @@ docker build -t zequencer_ncov:v2 .
 docker run --cpus 4 -it -v /Volumes:/Volumes -v /Users:/Users zequencer_ncov:v2
 
 ```
+# This example shows settings used in the immunocompromised paper for COVID-19
+- The email was replaced with a real email but censored only for this readme.
+- It uses the nCoV-2019 v4.1 primers, that are saved to the docker image.
+- the json file was saved to: /Volumes/T7/immunocompromised/config/variant_calling_rules_ncov_v4_all.json
+```json
+{
+  "ncbi_accession": "MN908947.3",
+  "input_dir": "/Volumes/T7/MHC_genotyper/immunocompromised/input_files/v4_1",
+  "out_dir": "/Volumes/T7/MHC_genotyper/immunocompromised/out_v4_2",
+  "email": "email_address@wisc.edu",
+  "bed_path": "/nCoV-2019/V4.1/SARS-CoV-2.scheme.bed",
+  "ref_fasta_path": "/nCoV-2019/V4.1/SARS-CoV-2.reference.fasta",
+  "ref_adaptor_path": "/nCoV-2019/V4.1/SARS-CoV-2.primer.fasta",
+  "config_path": "/ref/MN908947.3.config",
+  "ref_dir": "/ref",
+  "primer_amplicon_path" : "/nCoV-2019/V4.1/SARS-CoV-2.primer_amplicon.csv",
+  "src_dir": "/src",
+  "use_amplicon_norm_bbduk_trim": "f",
+  "ram": "20000"
+}
+```
+- This is the bash script used to run the files
+```bash
 
+docker run -it -v /Users:/Users -v /Volumes:/Volumes zequencer_ncov19:v2_0_3
+# assigned only 1 core because my machine did not have enough ram or cores to handle multiple processes running
+snakemake --snakefile /zequencer.smk --cores 1 --configfile /Volumes/T7/immunocompromised/config/variant_calling_rules_ncov_v4_all.json
+```
 # About fast_normalize downsampling vs amplicon mapping normalization
 - The existing nomalization was developed by Dr. Nick Loman, Professor of Microbial Genomics and Bioinformatics at  University of Birmingham, and adapted by Dr. David O'Connors lab (fast_normalize = false) maps each read to each primer (all 196+)
     - Then it will only retain up to the amount defined in reads_per_adaptor per each mapped primer
