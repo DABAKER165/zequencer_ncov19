@@ -99,13 +99,10 @@ COPY --from=packager /usr/bin/bcftools /bin/bcftools
 COPY --from=packager /htslib/bin/tabix /bin/tabix
 COPY --from=packager /htslib/bin/bgzip /bin/bgzip
 
-
-
 RUN apt update \
  && apt install -y python3 python3-pip samtools \
  # bcftools \
  && python3 -m pip --no-cache-dir install snakemake==6.9.1 biopython==1.76 pyfasta pandas==1.3.1 pysam==0.17.0
-
 
 RUN ln -s /bcftools/bin/bcftools /usr/bin/bcftools && \
 ln -s /bin/bbmap/reformat.sh /usr/bin/reformat.sh && \

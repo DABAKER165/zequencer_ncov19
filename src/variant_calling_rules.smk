@@ -93,6 +93,8 @@ rule bbmerge_reads:
     params:
         optional_arg_dict={},
         ram=config['ram']
+    threads:
+        2
     run:
         print(config['SAMPLES'])
         print(['in={0}'.format(input.in1),
@@ -126,6 +128,8 @@ rule bbmap_merged_reads:
     params:
         optional_arg_dict=config['bbmap_merged_reads'],
         ram=config['ram']
+    threads:
+        2
     run:
         import subprocess
 
@@ -171,6 +175,8 @@ rule filter_downsample_mask_bam:
     params:
         optional_arg_dict=config['filter_downsample_mask_bam'],
         sample_name="{sample}"
+    threads:
+        2
     run:
         import pandas as pd
         import subprocess
@@ -244,6 +250,8 @@ rule bbmap_call_variants:
         optional_arg_dict=config['bbmap_call_variants'],
         ram=config['ram'],
         ncbi_accession=config['ncbi_accession']
+    threads:
+        2
     run:
         import subprocess
         from os import path
@@ -308,7 +316,8 @@ rule bbmap_call_variants:
             subprocess.call(run_cmd,shell=True)
         import io
         import pandas as pd
-        if len(ann_vcf_files) >2:
+        print(ann_vcf_files)
+        if len(ann_vcf_files) >1:
             vcf1_path=ann_vcf_files[0]
             vcf2_path=ann_vcf_files[1]
 
@@ -370,6 +379,8 @@ rule bbduk_filter_primer_reads:
         optional_arg_dict=config['bbduk_filter_primer_reads'],
         ram=config['ram'],
         ncbi_accession=config['ncbi_accession']
+    threads:
+        2
     run:
         import subprocess
 
@@ -409,6 +420,8 @@ rule bbduk_trim_primer_and_quality:
     params:
         optional_arg_dict=config['bbduk_trim_primer_and_quality'],
         ram=config['ram']
+    threads:
+        2
     run:
         import subprocess
 
@@ -447,6 +460,8 @@ rule bbmerge_reads_from_bbduk_filter_trim:
     params:
         optional_arg_dict={},
         ram=config['ram']
+    threads:
+        2
     run:
         print(config['SAMPLES'])
         print(['in={0}'.format(input.in1),
@@ -480,6 +495,8 @@ rule slow_amplicon_normalization:
     params:
         optional_arg_dict=config['slow_amplicon_normalization'],
         ram=config['ram']
+    threads:
+        2
     run:
         import subprocess
         script_path = path.join(config['src_dir'], 'amplicon_normalization.py')
@@ -514,6 +531,8 @@ rule bbmap_reformat_trim_read_length:
     params:
         optional_arg_dict=config['bbmap_reformat_trim_read_length'],
         ram=config['ram']
+    threads:
+        2
     run:
         import subprocess
 
@@ -544,6 +563,8 @@ rule bbmap_filtered_trimmed:
     params:
         optional_arg_dict=config['bbmap_filtered_trimmed'],
         ram=config['ram']
+    threads:
+        2
     run:
         import subprocess
         main_cmd = 'java -ea -Xmx{0}m -Xms{0}m -cp /bin/bbmap/current/ align2.BBMap build=1'.format(params.ram)
@@ -583,7 +604,9 @@ rule create_primer_fasta_ref_bed:
         bed_path=config['bed_path']
     output:
         ref_adaptor_path=config['ref_adaptor_path'],
-        df_bed_temp=path.join(config['ref_dir'], 'df_bed.csv')
+        df_bed_temp=path.join(config['out_dir'], 'df_bed.csv')
+    threads:
+        2
     run:
         from Bio.Seq import Seq
         from Bio import SeqIO
@@ -637,9 +660,11 @@ rule create_primer_amp_from_ref_adaptor_fasta:
         '''
     input:
         ref_fasta_path=config['ref_fasta_path'],
-        df_bed_temp=path.join(config['ref_dir'], 'df_bed.csv')
+        df_bed_temp=path.join(config['out_dir'], 'df_bed.csv')
     output:
         primer_amplicon_path=config['primer_amplicon_path']
+    threads:
+        2
     run:
         import pandas as pd
         from Bio import SeqIO
@@ -682,6 +707,8 @@ rule create_insert_fasta_path_from_primer_amplicon:
         primer_amplicon_path=config['primer_amplicon_path']
     output:
         insert_fasta_path=config['insert_fasta_path']
+    threads:
+        2
     run:
         primer_amplicon_path=input.primer_amplicon_path
         import pandas as pd

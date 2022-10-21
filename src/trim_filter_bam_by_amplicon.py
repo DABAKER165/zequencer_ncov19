@@ -249,7 +249,7 @@ i = 0
 m = 0
 infile = pysam.AlignmentFile(in1, "rb")
 bam_header = infile.header.copy().to_dict()
-outfile = pysam.AlignmentFile(outf, "wh", header=bam_header)
+outfile = pysam.AlignmentFile(outf, "wb", header=bam_header)
 primer_group_unique_list = []
 outfile_groups = {}
 if 'PRIMER_GROUP' in df_primer_amp.columns:

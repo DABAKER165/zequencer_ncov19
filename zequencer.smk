@@ -82,15 +82,23 @@ if 'src_dir' not in config:
 ##################################
 # needs to end in -R1.fastq.gz and reverse file as -R2.fastq.gz
 sample_list = os.listdir(config['input_dir'])
-print(sample_list)
-SAMPLES_PRE = [x[:-12] for x in sample_list if (len(x) > 12) and (x[-12:] == '-R1.fastq.gz' and x[:2] != '._')]
+# print(config['input_dir'])
+# print(sample_list)
+suffix = '_L001_R1_001.fastq.gz'
+suffix ='-R1.fastq.gz'
+suffix_len = len(suffix)
+SAMPLES_PRE = [x[:-suffix_len] for x in sample_list if (len(x) > suffix_len) and (x[-suffix_len:] == suffix and x[:2] != '._')]
+# print(SAMPLES_PRE)
 SAMPLES = []
 for sample_i in SAMPLES_PRE:
-    if '{0}-R2.fastq.gz'.format(sample_i) in sample_list:
+    suffix_repl = suffix.replace('R1','R2')
+    # if '{0}-R2.fastq.gz'.format(sample_i) in sample_list:
+    if '{0}{1}'.format(sample_i,suffix_repl) in sample_list:
         SAMPLES.append(sample_i)
 # SAMPLES=['ZIKV-DAKAR-41524-06192021_Rep01']
+# print(SAMPLES)
 config['SAMPLES'] = SAMPLES
-print(config)
+# print(config)
 
 #################################
 # Begin the Modulized Workflow #
