@@ -221,6 +221,31 @@
   }
 }
 ```
+-This example will be for artic V3
+```json
+{
+  "ncbi_accession": "MN908947.3",
+  "email": "dabaker3@wisc.edu",
+  "bed_path": "path_to_local_repository/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V3/nCoV-2019.scheme.bed",
+  "ref_fasta_path": "/path_to_local_repository/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V3/nCoV-2019.reference.fasta",
+  "ref_adaptor_path": "/path_to_local_repository/zequencer_ncov19/zequencer_ncov19/nCoV-2019/V3/nCoV-2019_adapters.fasta",
+  "config_path": "/path_to_local_repository/zequencer_ncov19/zequencer_ncov19/ref/MN908947.3.config",
+  "ref_dir": "/path_to_local_repository/zequencer_ncov19/ref",
+  "out_dir": "/path_to_data/out",
+  "primer_amplicon_path" : "/path_to_local_repository/zequencer_ncov19/nCoV-2019/V3/nCoV-2019.primer_amplicon.csv",
+  "input_dir": "/path_to_data/fastq",
+  "use_amplicon_norm_bbduk_trim": "f",
+  "filter_downsample_mask_bam": {
+    "--max_ins": "1",
+    "--max_sub": "1",
+    "--max_del": "1",
+    "--downsample": "t",
+    "--reads_per_amplicon": "3000"
+  }
+}
+
+
+```
 # Running Pipeline:
 - Running from docker is recommended but still optional.
   - Note: If using docker the ~/ as a shortcut points to the home directory of the image, not the mount
